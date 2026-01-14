@@ -44,7 +44,8 @@ Additional rule:
 This design **reduces greedy chaining** while still **merging genuinely equivalent concepts**, giving a compact and interpretable set of final canonical tags.
 
 ## 📦 Output
-https://drive.google.com/file/d/1PtvX4X88ZfCezG7llT1icC_wArYvFgnV/view?usp=drive_link
+https://drive.google.com/drive/folders/1quBZ0NfxY52pdXmJY-274GrDhPU-gf_V?usp=sharing
+
 
 ## 📚 Resources
 
