@@ -1,6 +1,6 @@
 # 📝 Anchor Tag Registry for Fashion Attributes
 
-A system for standardizing noisy fashion tags into a interpretable anchor/canonical registry using semantic embeddings, density-based clustering, and controlled registry logic.
+A system for standardizing noisy fashion tags into an interpretable anchor/canonical registry using semantic embeddings, density-based clustering, and controlled registry logic.
 It converts thousands of inconsistent raw tags into a stable set of meaningful canonical tags, while preserving semantic nuance and avoiding over-merging.
 
 ## 🔁 Pipeline Flow
