@@ -1,5 +1,6 @@
 import pandas as pd
 
+#Download dataset 'women_kurta_suit_sets_tags.csv' and place in workspace
 df = pd.read_csv("women_kurta_suit_sets_tags.csv")
 df.head()
 
@@ -18,6 +19,7 @@ len(raw_tags), raw_tags[:10]
 
 import re
 
+#Basic Preprocessing
 def normalize_phrase(text):
     text = text.lower().strip()
     text = re.sub(r"\s+", " ", text)   # normalize spaces
@@ -28,7 +30,6 @@ normalized_tags = [normalize_phrase(t) for t in raw_tags]
 pd.Series(normalized_tags).sample(10)
 
 import hdbscan
-from sklearn.cluster import AgglomerativeClustering
 from rapidfuzz import fuzz
 
 from transformers import AutoTokenizer
@@ -51,7 +52,7 @@ model.eval()
 device = "cuda" if torch.cuda.is_available() else "cpu"
 model.to(device)
 
-# ---- Text embedding function (FashionCLIP equivalent) ----
+# ---- Text embedding function (using fashion-clip-2.0 embedding model) ----
 def encode_text_fashionclip(texts, batch_size=32):
     all_embeddings = []
 
@@ -125,6 +126,7 @@ print(f"✅ Final total clusters (including singletons): {len(unique_clusters)}"
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
 
+#Here we are evaluating part-A which refers to first half of process in which clustering using HDBSCAN has been done on all the unqiue tags
 def evaluate_part_a(embeddings, labels):
     unique_clusters = np.unique(labels)
 
@@ -161,13 +163,13 @@ def evaluate_part_a(embeddings, labels):
         "compactness_score": compactness
     }
 
-part_a_metrics = evaluate_part_a(
+initial_clustering_metrics = evaluate_part_a(
     embeddings=text_embeddings,
     labels=cluster_labels
 )
 
-print("🔹 Part A Metrics")
-for k, v in part_a_metrics.items():
+print("🔹 initial_clustering_metrics")
+for k, v in initial_clustering_metrics.items():
     print(f"{k}: {v:.4f}")
 
 # Build the clusters DataFrame (if not already done)
@@ -186,12 +188,13 @@ clusters_df = clusters_df.sort_values(["cluster", "tag"])
 # Export to CSV (downloadable from Colab)
 clusters_df.to_csv("subset_clusters_formed_HDBSCAN_modify.csv", index=False)
 
-print("✅ Saved 'clusters_complete_test_overview.csv' with all clusters!")
+print("✅ Saved 'subset_clusters_formed_HDBSCAN_modify.csv' with all clusters!")
 print(f"Total clusters: {clusters_df['cluster'].nunique()}")
 print(f"Total tags: {len(clusters_df)}")
 
 
 from rapidfuzz import fuzz
+#Select a suitable canonical name from a collection based on fuzzy similarity.
 def pick_fuzzy_canonical(phrases):
     if len(phrases) == 1:
         return phrases[0]
@@ -230,7 +233,7 @@ inspection_df.to_csv(
     index=False
 )
 
-print("✅ Saved fuzzy_canonical_inspection.csv")
+print("✅ Saved fuzzy_canonical_inspection_HDBSCAN_modify.csv")
 print(f"Total clusters: {inspection_df['cluster'].nunique()}")
 print(f"Total canonical tags: {inspection_df['canonical_tag'].nunique()}")
 
@@ -337,7 +340,7 @@ final_df.to_csv(
     index=False
 )
 
-print("✅ Saved final_canonical_registry.csv")
+print("✅ Saved final_canonical_registry__HDBSCAN_Anchor_thres_4_emb_thres_0.95_fuzzy_85.csv")
 print("Total final canonical tags:", final_df["final_canonical_tag"].nunique())
 
 
@@ -401,7 +404,9 @@ def fast_inter_similarity(centroids):
     # exclude diagonal
     return (SIM_C.sum() - n) / (n * (n - 1))
 
-def evaluate_part_b_fast(embeddings, labels):
+#This evaluates the part-B of the process in which we are grouping the clusters using a registry logic
+#So as to reduce redundancy 
+def evaluate_canonical_registry_quality(embeddings, labels):
     E = l2_normalize(embeddings.astype(np.float64))
     SIM = E @ E.T
 
@@ -417,7 +422,7 @@ def evaluate_part_b_fast(embeddings, labels):
         "compactness_score": compactness
     }
 
-results = evaluate_part_b_fast(
+results = evaluate_canonical_registry_quality(
     canonical_embeddings,
     part_b_labels
 )
@@ -425,31 +430,3 @@ results = evaluate_part_b_fast(
 print(f"Intra-cluster similarity : {results['intra_cluster_similarity']:.4f}")
 print(f"Inter-cluster similarity : {results['inter_cluster_dissimilarity']:.4f}")
 print(f"Compactness score        : {results['compactness_score']:.4f}")
-
-import pandas as pd
-
-final_df = pd.read_csv(
-    "final_canonical_registry__HDBSCAN_Anchor_thres_4_emb_thres_0.95_fuzzy_85.csv"
-)
-
-# Count raw tags per final canonical
-cluster_sizes = (
-    final_df
-    .groupby("final_canonical_tag")
-    .size()
-    .reset_index(name="cluster_size")
-)
-
-# Sort largest → smallest
-cluster_sizes = cluster_sizes.sort_values(
-    "cluster_size", ascending=False
-).reset_index(drop=True)
-
-# Cumulative raw tag count
-cluster_sizes["cumulative_raw_tags"] = cluster_sizes["cluster_size"].cumsum()
-
-# Cumulative percentage
-total_tags = cluster_sizes["cluster_size"].sum()
-cluster_sizes["cumulative_pct"] = (
-    cluster_sizes["cumulative_raw_tags"] / total_tags
-)
