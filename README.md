@@ -1,5 +1,3 @@
-https://rilcloud-my.sharepoint.com/:x:/g/personal/divyashree_bs_ril_com/IQBDtXso-SmwS6upvi-pj0qCAc-VFOonZ-S-LZj-6Ftzt9c?wdOrigin=TEAMS-WEB.p2p_ns.rwc&wdExp=TEAMS-TREATMENT&wdhostclicktime=1767944261862&web=1
-
 # 📝 Anchor Tag Registry for Fashion Attributes
 
 A system for standardizing noisy fashion tags into an interpretable anchor/canonical registry using semantic embeddings, density-based clustering, and controlled registry logic.
